@@ -30,11 +30,30 @@ async function run() {
     const db = client.db("track2hired"); // database name
     const usersCollection = db.collection("users"); // collection name
     const jobsCollection = db.collection("jobs"); // another collection
+    await jobsCollection.createIndex(
+      { email: 1, company: 1, title: 1 }, 
+      { unique: true }
+    );
 
     app.post('/jobs', async (req, res) => {
+      try{
         const job = req.body;
         const result = await jobsCollection.insertOne(job);
         res.send(result);
+      }
+      catch(error){
+        if (error.code === 11000) {
+          return res.status(409).send({ 
+            status: "error", 
+            message: "You've already saved this job" 
+          });
+        }
+        res.status(500).send({
+          status: "error",
+          message: "Internal server error",
+        });
+      }
+        
     })
     app.get('/alljobs', async(req, res)=> {
         const query = {};
