@@ -39,7 +39,7 @@ async function run() {
       { unique: true }
     );
 
-    app.post('/jobs', async (req, res) => {
+    app.post('/save/jobs', async (req, res) => {
       try{
         const job = req.body;
         // Generate unique jobID using email, company, and title
