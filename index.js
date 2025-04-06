@@ -2,6 +2,8 @@ import express from 'express';
 import 'dotenv/config';
 import { MongoClient, ServerApiVersion } from 'mongodb';
 import cors from 'cors';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateCoverLetterRouter } from './Routes/Gemini-ApI-Calls/generateCoverLetter.js';
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -30,6 +32,8 @@ async function run() {
     const db = client.db("track2hired"); // database name
     const usersCollection = db.collection("users"); // collection name
     const jobsCollection = db.collection("jobs"); // another collection
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
     await jobsCollection.createIndex(
       { email: 1, company: 1, title: 1 }, 
       { unique: true }
@@ -38,7 +42,17 @@ async function run() {
     app.post('/jobs', async (req, res) => {
       try{
         const job = req.body;
-        const result = await jobsCollection.insertOne(job);
+        // Generate unique jobID using email, company, and title
+    const sanitizedEmail = job.email.split('@')[0]; // Get part before @
+    const sanitizedCompany = job.company.replace(/\W+/g, '').toLowerCase(); // Remove special chars
+    const sanitizedTitle = job.title.replace(/\W+/g, '').toLowerCase();
+    const jobID = `${sanitizedEmail}-${sanitizedCompany}-${sanitizedTitle}`;
+    const jobWithId = {
+      ...job,
+      jobID: jobID
+    }
+
+        const result = await jobsCollection.insertOne(jobWithId);
         res.send(result);
       }
       catch(error){
@@ -62,8 +76,19 @@ async function run() {
         res.send(allJobs);
 
     })
+    app.get('/jobs/:email', async(req, res)=> {
+      try {
+        const email = req.params.email;
+        const query = {email: email};
+        const userJobs = await jobsCollection.find(query).toArray();
+        res.send(userJobs);
+      } catch (error) {
+        console.error("Error fetching user jobs:", error);
+        res.status(500).send({ error: "Internal server error" });
+      }
+    })
 
-
+    app.use(generateCoverLetterRouter(jobsCollection, genAI));
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
