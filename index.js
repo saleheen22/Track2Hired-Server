@@ -4,6 +4,7 @@ import { MongoClient, ServerApiVersion } from 'mongodb';
 import cors from 'cors';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { generateCoverLetterRouter } from './Routes/Gemini-ApI-Calls/generateCoverLetter.js';
+import { CompanySearch } from './Routes/Gemini-ApI-Calls/CompanySearch.js';
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -89,6 +90,7 @@ async function run() {
     })
 
     app.use(generateCoverLetterRouter(jobsCollection, genAI));
+    app.use(CompanySearch(jobsCollection, genAI));
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
