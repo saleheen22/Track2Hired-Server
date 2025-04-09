@@ -5,6 +5,7 @@ import cors from 'cors';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { generateCoverLetterRouter } from './Routes/Gemini-ApI-Calls/generateCoverLetter.js';
 import { CompanySearch } from './Routes/Gemini-ApI-Calls/CompanySearch.js';
+import { statusToggleRouter } from './Routes/StatusToggle.js';
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -88,7 +89,9 @@ async function run() {
         res.status(500).send({ error: "Internal server error" });
       }
     })
-
+    //toogle job status
+    app.use(statusToggleRouter(jobsCollection));
+    //gemini api
     app.use(generateCoverLetterRouter(jobsCollection, genAI));
     app.use(CompanySearch(jobsCollection, genAI));
 
