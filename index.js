@@ -6,6 +6,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { generateCoverLetterRouter } from './Routes/Gemini-ApI-Calls/generateCoverLetter.js';
 import { CompanySearch } from './Routes/Gemini-ApI-Calls/CompanySearch.js';
 import { statusToggleRouter } from './Routes/StatusToggle.js';
+import { interviewDateRouter } from './Routes/InterviewDate.js';
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -94,7 +96,8 @@ async function run() {
     //gemini api
     app.use(generateCoverLetterRouter(jobsCollection, genAI));
     app.use(CompanySearch(jobsCollection, genAI));
-
+// interview date
+app.use(interviewDateRouter(jobsCollection));
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
