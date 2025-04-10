@@ -8,6 +8,7 @@ import { CompanySearch } from './Routes/Gemini-ApI-Calls/CompanySearch.js';
 import { statusToggleRouter } from './Routes/StatusToggle.js';
 import { interviewDateRouter } from './Routes/InterviewDate.js';
 import { saveResumeRouter } from './Routes/SaveResume.js';
+import { createUser } from './Routes/CreateUser.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -46,7 +47,12 @@ async function run() {
       { email: 1, company: 1, title: 1 }, 
       { unique: true }
     );
-
+    await usersCollection.createIndex(
+      { email: 1 },
+      { unique: true}
+    );
+    // create a new user
+    app.use(createUser(usersCollection));
     app.post('/save/jobs', async (req, res) => {
       try{
         const job = req.body;
