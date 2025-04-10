@@ -7,6 +7,7 @@ import { generateCoverLetterRouter } from './Routes/Gemini-ApI-Calls/generateCov
 import { CompanySearch } from './Routes/Gemini-ApI-Calls/CompanySearch.js';
 import { statusToggleRouter } from './Routes/StatusToggle.js';
 import { interviewDateRouter } from './Routes/InterviewDate.js';
+import { saveResumeRouter } from './Routes/SaveResume.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -15,7 +16,10 @@ const port = process.env.PORT || 3000;
 //middlewares
 app.use(express.json()); // for parsing application/json
 app.use(cors()); // for enabling CORS (Cross-Origin Resource Sharing)
+// On your server
 
+// app.use(express.json({ limit: '50mb' }));
+// app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6vcfr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -84,7 +88,7 @@ async function run() {
       try {
         const email = req.params.email;
         const query = {email: email};
-        const userJobs = await jobsCollection.find(query).toArray();
+        const userJobs = await jobsCollection.find(query).sort({ dateExtracted: -1 }).toArray();
         res.send(userJobs);
       } catch (error) {
         console.error("Error fetching user jobs:", error);
@@ -98,6 +102,9 @@ async function run() {
     app.use(CompanySearch(jobsCollection, genAI));
 // interview date
 app.use(interviewDateRouter(jobsCollection));
+
+//save resume
+app.use(saveResumeRouter(jobsCollection));
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
