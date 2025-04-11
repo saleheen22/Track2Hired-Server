@@ -1,6 +1,6 @@
 import express from 'express';
 
-export function saveResumeRouter(jobsCollection) {
+export function saveResumeRouter(usersCollection) {
   const router = express.Router();
 
   // PATCH /resume/upload/:email to save or update a resume
@@ -27,7 +27,7 @@ export function saveResumeRouter(jobsCollection) {
       }
 
       // Find jobs for this email and update all with resume data
-      const result = await jobsCollection.updateMany(
+      const result = await usersCollection.updateMany(
         { email: email },
         {
           $set: {

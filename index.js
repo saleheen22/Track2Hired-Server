@@ -5,6 +5,7 @@ import cors from 'cors';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { generateCoverLetterRouter } from './Routes/Gemini-ApI-Calls/generateCoverLetter.js';
 import { CompanySearch } from './Routes/Gemini-ApI-Calls/CompanySearch.js';
+import {getResumeRouter} from './Routes/getResume.js';
 import { statusToggleRouter } from './Routes/StatusToggle.js';
 import { interviewDateRouter } from './Routes/InterviewDate.js';
 import { saveResumeRouter } from './Routes/SaveResume.js';
@@ -82,7 +83,7 @@ async function run() {
         });
       }
         
-    })
+    });
     app.get('/alljobs', async(req, res)=> {
         const query = {};
         const cursor = jobsCollection.find(query);
@@ -100,7 +101,8 @@ async function run() {
         console.error("Error fetching user jobs:", error);
         res.status(500).send({ error: "Internal server error" });
       }
-    })
+    });
+    app.use(getResumeRouter(usersCollection));
     //toogle job status
     app.use(statusToggleRouter(jobsCollection));
     //gemini api
@@ -110,7 +112,7 @@ async function run() {
 app.use(interviewDateRouter(jobsCollection));
 
 //save resume
-app.use(saveResumeRouter(jobsCollection));
+app.use(saveResumeRouter(usersCollection));
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
