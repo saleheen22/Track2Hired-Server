@@ -106,7 +106,7 @@ async function run() {
     //toogle job status
     app.use(statusToggleRouter(jobsCollection));
     //gemini api
-    app.use(generateCoverLetterRouter(jobsCollection, genAI));
+    app.use(generateCoverLetterRouter(jobsCollection, genAI, usersCollection));
     app.use(CompanySearch(jobsCollection, genAI));
 // interview date
 app.use(interviewDateRouter(jobsCollection));
