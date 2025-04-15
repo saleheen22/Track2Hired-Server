@@ -33,9 +33,18 @@ Company: ${job.company}
 Job Description: ${job.description}
 
 User's Resume: 
-${resumeText}
+User's Resume: 
+${resumeText ? resumeText : "No resume available, please create a generic cover letter based on job description."}
 
-Please produce a personalized, concise and compelling cover letter based on the job details and the user's resume (if available). Match the skills in the resume with the job requirements where possible. Please output the text in a preformatted style with clear line breaks, indentations, and white spaces exactly as you would in a final document. Make sure each paragraph and section is clearly separated. and make sure to include the user's name and contact information at the top of the letter. The cover letter should be suitable for a job application and should not exceed 300 words. The user is applying for this job to get a better job in the following field: ${job.title}.`;
+Instructions:
+1. Create a personalized, concise and compelling cover letter.
+2. Match specific skills from the resume with job requirements.
+3. Structure with clear paragraphs: introduction, why interested in role, relevant experience and skills, closing.
+4. Include today's date and formal letter formatting, name email address from the resume if available.
+5. Use "Sincerely," or "Best Regards," as closing.
+6. Length: maximum 280 words.
+7. Voice: professional, confident, enthusiastic.
+8. Include email address name phone number from the resume if available.`;
 
       const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
       const result = await model.generateContent(prompt);
