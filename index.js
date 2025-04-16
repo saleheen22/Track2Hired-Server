@@ -1,5 +1,7 @@
 import express from 'express';
 import 'dotenv/config';
+import { generateInterviewRouter } from './Routes/Gemini-ApI-Calls/mockInterview.js';
+
 import { MongoClient, ServerApiVersion } from 'mongodb';
 import cors from 'cors';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -84,6 +86,7 @@ async function run() {
       }
         
     });
+  
     app.get('/alljobs', async(req, res)=> {
         const query = {};
         const cursor = jobsCollection.find(query);
@@ -102,6 +105,7 @@ async function run() {
         res.status(500).send({ error: "Internal server error" });
       }
     });
+    app.use(generateInterviewRouter(jobsCollection, genAI));
     app.use(getResumeRouter(usersCollection));
     //toogle job status
     app.use(statusToggleRouter(jobsCollection));
