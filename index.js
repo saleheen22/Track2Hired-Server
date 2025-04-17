@@ -1,7 +1,9 @@
 import express from 'express';
 import 'dotenv/config';
 import { generateInterviewRouter } from './Routes/Gemini-ApI-Calls/mockInterview.js';
-
+import { generateColdEmailRouter } from './Routes/Gemini-ApI-Calls/generateColdEmailRouter.js';
+import jwt from 'jsonwebtoken';
+import cookieParser from 'cookie-parser';
 import { MongoClient, ServerApiVersion } from 'mongodb';
 import cors from 'cors';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -21,7 +23,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json()); // for parsing application/json
 app.use(cors()); // for enabling CORS (Cross-Origin Resource Sharing)
 // On your server
-
+app.use(cookieParser());
 // app.use(express.json({ limit: '50mb' }));
 // app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -86,7 +88,18 @@ async function run() {
       }
         
     });
-  
+  //jwt functionality
+
+  app.post('/jwt', async (req, res) => {
+    const userEmail = req.body;
+    const token = jwt.token(userEmail, process.env.JWT_SECRET, {expiresIn: '24h'});
+    res.cookie('track2hired', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+
+    }).send({status: 'success', message: 'Token generated successfully'});
+
+  })
     app.get('/alljobs', async(req, res)=> {
         const query = {};
         const cursor = jobsCollection.find(query);
@@ -112,6 +125,7 @@ async function run() {
     //gemini api
     app.use(generateCoverLetterRouter(jobsCollection, genAI, usersCollection));
     app.use(CompanySearch(jobsCollection, genAI));
+    app.use(generateColdEmailRouter(jobsCollection, genAI, usersCollection));
 // interview date
 app.use(interviewDateRouter(jobsCollection));
 
