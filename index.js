@@ -21,9 +21,14 @@ const port = process.env.PORT || 3000;
 
 //middlewares
 app.use(express.json()); // for parsing application/json
-app.use(cors()); // for enabling CORS (Cross-Origin Resource Sharing)
+
 // On your server
 app.use(cookieParser());
+app.use(cors({
+  origin: ['http://localhost:5173'],
+  credentials: true, 
+
+}))
 // app.use(express.json({ limit: '50mb' }));
 // app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -89,25 +94,51 @@ async function run() {
         
     });
   //jwt functionality
-
+  const verifyUser = async(req, res, next)=>{
+    const token = req.cookies?.track2hired;
+    if (!token) {
+      return res.status(401).json({ message: "No token provided. Unauthorized." });
+    }
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      // Check if user exists in usersCollection
+      const user = await usersCollection.findOne({ email: decoded.email });
+      if (!user) {
+        return res.status(401).json({ message: "User not found. Unauthorized." });
+      }
+      req.user = decoded;
+      next();
+    } catch (err) {
+      return res.status(401).json({ message: "Invalid or expired token." });
+    }
+  }
   app.post('/jwt', async (req, res) => {
     const userEmail = req.body;
-    const token = jwt.token(userEmail, process.env.JWT_SECRET, {expiresIn: '24h'});
+    const token = jwt.sign(userEmail, process.env.JWT_SECRET, {expiresIn: '24h'});
     res.cookie('track2hired', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
 
     }).send({status: 'success', message: 'Token generated successfully'});
 
-  })
-    app.get('/alljobs', async(req, res)=> {
+  });
+  app.post('/logout', (req, res) => {
+    res.cookie('track2hired', '', {
+      httpOnly: true,
+      expires: new Date(0), // Expire the cookie immediately
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
+    });
+    res.send({ status: 'success', message: 'Logged out and cookie cleared' });
+  });
+    app.get('/alljobs', verifyUser, async(req, res)=> {
         const query = {};
         const cursor = jobsCollection.find(query);
         const allJobs = await cursor.toArray();
         res.send(allJobs);
 
     })
-    app.get('/jobs/:email', async(req, res)=> {
+    app.get('/jobs/:email', verifyUser, async(req, res)=> {
       try {
         const email = req.params.email;
         const query = {email: email};
