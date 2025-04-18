@@ -141,6 +141,9 @@ async function run() {
     app.get('/jobs/:email', verifyUser, async(req, res)=> {
       try {
         const email = req.params.email;
+        if (req.user.email !== email) {
+          return res.status(403).json({ message: "Forbidden: You can only access your own jobs." });
+        }
         const query = {email: email};
         const userJobs = await jobsCollection.find(query).sort({ dateExtracted: -1 }).toArray();
         res.send(userJobs);
