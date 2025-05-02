@@ -114,7 +114,7 @@ async function run() {
   }
   app.post('/jwt', async (req, res) => {
     const userEmail = req.body;
-    const token = jwt.sign(userEmail, process.env.JWT_SECRET, {expiresIn: '24h'});
+    const token = jwt.sign(userEmail, process.env.JWT_SECRET);
     res.cookie('track2hired', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
