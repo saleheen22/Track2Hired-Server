@@ -1,25 +1,29 @@
-import express from 'express';
+import express from "express";
 
-export function generateCoverLetterRouter(jobsCollection, genAI, usersCollection) {
+export function generateCoverLetterRouter(
+  jobsCollection,
+  genAI,
+  usersCollection,
+) {
   const router = express.Router();
 
-  router.post('/generate-cover-letter/:jobID', async (req, res) => {
+  router.post("/generate-cover-letter/:jobID", async (req, res) => {
     try {
       const jobID = req.params.jobID;
       const job = await jobsCollection.findOne({ jobID });
-      
+
       if (!job) {
         return res.status(404).json({
           status: "error",
-          message: "Job not found"
+          message: "Job not found",
         });
       }
-      
+
       // Get user's resume from usersCollection using the email from the job
       const userEmail = job.email;
       const user = await usersCollection.findOne({ email: userEmail });
-      
-      let resumeText = '';
+
+      let resumeText = "";
       if (user && user.resume && user.resume.extractedText) {
         resumeText = user.resume.extractedText;
       } else {
@@ -46,33 +50,34 @@ Instructions:
 7. Voice: professional, confident, enthusiastic.
 8. Include email address name phone number from the resume if available.`;
 
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
       const result = await model.generateContent(prompt);
-      const coverLetter = result.response?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      
+      const coverLetter =
+        result.response?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
       if (!coverLetter) {
         return res.status(500).json({
           status: "error",
-          message: "Failed to generate cover letter"
+          message: "Failed to generate cover letter",
         });
       }
-      
+
       console.log("Generated Cover Letter:", coverLetter.length);
       await jobsCollection.updateOne(
         { jobID },
-        { $set: { coverLetter, coverLetterGeneratedAt: new Date() } }
+        { $set: { coverLetter, coverLetterGeneratedAt: new Date() } },
       );
-      
+
       res.status(200).json({
         status: "success",
         jobID,
-        coverLetter
+        coverLetter,
       });
     } catch (error) {
       console.error("Error generating cover letter:", error);
       res.status(500).json({
         status: "error",
-        message: "Internal server error"
+        message: "Internal server error",
       });
     }
   });

@@ -1,17 +1,17 @@
-import express from 'express';
+import express from "express";
 
 export function generateInterviewRouter(jobsCollection, genAI) {
   const router = express.Router();
 
-  router.post('/generate-interview/:jobID', async (req, res) => {
+  router.post("/generate-interview/:jobID", async (req, res) => {
     try {
       const jobID = req.params.jobID;
       const job = await jobsCollection.findOne({ jobID });
-      
+
       if (!job) {
         return res.status(404).json({
           success: false,
-          message: "Job not found"
+          message: "Job not found",
         });
       }
 
@@ -48,62 +48,62 @@ Format the response as a valid JSON object with this structure:
 
 Please ensure the content is technically accurate and relevant to the job position.`;
 
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
       const result = await model.generateContent(prompt);
-      const generatedText = result.response?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      
+      const generatedText =
+        result.response?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
       if (!generatedText) {
         return res.status(500).json({
           success: false,
-          message: "Failed to generate interview questions"
+          message: "Failed to generate interview questions",
         });
       }
-      
+
       // Extract JSON from the response
       let interviewData;
       try {
         // Find JSON content within the response (sometimes Gemini adds markdown formatting)
         const jsonRegex = /{[\s\S]*}/;
         const jsonMatch = generatedText.match(jsonRegex);
-        
+
         if (jsonMatch) {
           interviewData = JSON.parse(jsonMatch[0]);
         } else {
           interviewData = JSON.parse(generatedText);
         }
-        
+
         // Add generated flag and jobID
         interviewData.generated = true;
         interviewData.jobID = jobID;
-        
       } catch (parseError) {
         console.error("Error parsing interview data:", parseError);
         return res.status(500).json({
           success: false,
-          message: "Failed to parse generated interview questions"
+          message: "Failed to parse generated interview questions",
         });
       }
-      
+
       // Save to database
       await jobsCollection.updateOne(
         { jobID },
-        { $set: { 
+        {
+          $set: {
             mockInterviewData: interviewData,
-            interviewGeneratedAt: new Date() 
-          } 
-        }
+            interviewGeneratedAt: new Date(),
+          },
+        },
       );
-      
+
       res.status(200).json({
         success: true,
-        interviewData: interviewData
+        interviewData: interviewData,
       });
-      
     } catch (error) {
       console.error("Error generating interview questions:", error);
       res.status(500).json({
         success: false,
-        message: "Internal server error"
+        message: "Internal server error",
       });
     }
   });

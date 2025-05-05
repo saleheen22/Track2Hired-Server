@@ -1,10 +1,10 @@
-import express from 'express';
+import express from "express";
 
 export function interviewDateRouter(jobsCollection) {
   const router = express.Router();
 
   // PATCH /interview-date/:jobID to update the interview date
-  router.patch('/interview-date/:jobID', async (req, res) => {
+  router.patch("/interview-date/:jobID", async (req, res) => {
     try {
       const { jobID } = req.params;
       const { interviewDate } = req.body; // Expected to be a date string or Date
@@ -22,7 +22,7 @@ export function interviewDateRouter(jobsCollection) {
       // Update the job document with the new interviewDate
       const result = await jobsCollection.updateOne(
         { jobID },
-        { $set: { interviewDate: parsedDate } }
+        { $set: { interviewDate: parsedDate } },
       );
 
       if (result.matchedCount === 0) {
@@ -32,7 +32,7 @@ export function interviewDateRouter(jobsCollection) {
       res.status(200).json({
         message: "Interview date updated successfully",
         jobID,
-        interviewDate: parsedDate
+        interviewDate: parsedDate,
       });
     } catch (error) {
       console.error("Error updating interview date:", error);

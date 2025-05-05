@@ -1,9 +1,13 @@
-import express from 'express';
+import express from "express";
 
-export function generateColdEmailRouter(jobsCollection, genAI, usersCollection) {
+export function generateColdEmailRouter(
+  jobsCollection,
+  genAI,
+  usersCollection,
+) {
   const router = express.Router();
 
-  router.post('/cold-email/:jobID', async (req, res) => {
+  router.post("/cold-email/:jobID", async (req, res) => {
     try {
       const jobID = req.params.jobID;
       const job = await jobsCollection.findOne({ jobID });
@@ -11,7 +15,7 @@ export function generateColdEmailRouter(jobsCollection, genAI, usersCollection) 
       if (!job) {
         return res.status(404).json({
           status: "error",
-          message: "Job not found"
+          message: "Job not found",
         });
       }
 
@@ -19,7 +23,7 @@ export function generateColdEmailRouter(jobsCollection, genAI, usersCollection) 
       const userEmail = job.email;
       const user = await usersCollection.findOne({ email: userEmail });
 
-      let resumeText = '';
+      let resumeText = "";
       if (user && user.resume && user.resume.extractedText) {
         resumeText = user.resume.extractedText;
       } else {
@@ -45,32 +49,33 @@ Instructions:
 8. Try to match skills/experience/project from the resume with job requirements and which are preferred mentioned in the job description and mention it in the email. [IMPORTANT].
 9. End with a professional closing and include the user's name and contact information if available.`;
 
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
       const result = await model.generateContent(prompt);
-      const coldEmail = result.response?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const coldEmail =
+        result.response?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
       if (!coldEmail) {
         return res.status(500).json({
           status: "error",
-          message: "Failed to generate cold email"
+          message: "Failed to generate cold email",
         });
       }
 
       await jobsCollection.updateOne(
         { jobID },
-        { $set: { coldEmail, coldEmailGeneratedAt: new Date() } }
+        { $set: { coldEmail, coldEmailGeneratedAt: new Date() } },
       );
 
       res.status(200).json({
         status: "success",
         jobID,
-        coldEmail
+        coldEmail,
       });
     } catch (error) {
       console.error("Error generating cold email:", error);
       res.status(500).json({
         status: "error",
-        message: "Internal server error"
+        message: "Internal server error",
       });
     }
   });
