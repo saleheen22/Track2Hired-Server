@@ -36,7 +36,7 @@ export function interviewDateRouter(jobsCollection) {
       res.status(200).json({
         message: "Interview date updated successfully",
         jobID,
-        interviewDate: parsedDate,
+        interviewDate: updateValue,
       });
     } catch (error) {
       console.error("Error updating interview date:", error);
