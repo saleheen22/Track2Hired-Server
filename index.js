@@ -14,7 +14,8 @@ import { statusToggleRouter } from "./Routes/StatusToggle.js";
 import { interviewDateRouter } from "./Routes/InterviewDate.js";
 import { saveResumeRouter } from "./Routes/SaveResume.js";
 import { createUser } from "./Routes/CreateUser.js";
-
+import { deleteJobRouter } from "./Routes/deleteJobRouter.js";
+import { updateJobRouter } from "./Routes/updateJobRouter.js";
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -167,6 +168,11 @@ async function run() {
 
     //save resume
     app.use(saveResumeRouter(usersCollection));
+
+    //delete job
+    app.use(deleteJobRouter(jobsCollection));
+    //update job
+    app.use(updateJobRouter(jobsCollection));
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
