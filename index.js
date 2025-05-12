@@ -24,9 +24,17 @@ app.use(express.json()); // for parsing application/json
 
 // On your server
 app.use(cookieParser());
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  next();
+});
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173",
+      "https://track2hired.web.app",
+      "chrome-extension://*"
+    ],
     credentials: true,
   }),
 );
@@ -42,7 +50,26 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
-
+app.post("/jwt", async (req, res) => {
+      const userEmail = req.body;
+      const token = jwt.sign(userEmail, process.env.JWT_SECRET);
+      res
+        .cookie("track2hired", token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+        })
+        .send({ status: "success", message: "Token generated successfully" });
+    });
+    app.post("/logout", (req, res) => {
+      res.cookie("track2hired", "", {
+        httpOnly: true,
+        expires: new Date(0), // Expire the cookie immediately
+        secure: true,
+        sameSite: "none",
+      });
+      res.send({ status: "success", message: "Logged out and cookie cleared" });
+    });
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -111,26 +138,8 @@ async function run() {
         return res.status(401).json({ message: "Invalid or expired token." });
       }
     };
-    app.post("/jwt", async (req, res) => {
-      const userEmail = req.body;
-      const token = jwt.sign(userEmail, process.env.JWT_SECRET);
-      res
-        .cookie("track2hired", token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-        })
-        .send({ status: "success", message: "Token generated successfully" });
-    });
-    app.post("/logout", (req, res) => {
-      res.cookie("track2hired", "", {
-        httpOnly: true,
-        expires: new Date(0), // Expire the cookie immediately
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-      });
-      res.send({ status: "success", message: "Logged out and cookie cleared" });
-    });
-    app.get("/alljobs", verifyUser, async (req, res) => {
+    
+    app.get("/alljobs", async (req, res) => {
       const query = {};
       const cursor = jobsCollection.find(query);
       const allJobs = await cursor.toArray();
@@ -188,6 +197,5 @@ app.get("/", (req, res) => {
   res.send("Track 2 Hired");
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on PORT: ${port}`);
-});
+
+export default app;
